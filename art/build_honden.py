@@ -92,10 +92,16 @@ for y in (-4.8,4.8):
 for x in (-7.7,7.7):box('Side lintel',(x,0,6.9),(.4,10,.5))
 
 # Central paired doors, railings and panel rhythms.
+door_bottom,door_top=1.47,4.90
+door_height=door_top-door_bottom
+door_center=(door_bottom+door_top)/2
 for x in (-1.18,1.18):
-    box('Door leaf',(x,-2.76,3.42),(2.28,.13,3.9),doors)
-    for dx in (-1.15,1.15):box('Door frame',(x+dx,-2.87,3.42),(.075,.09,3.95),accent)
-    for j in range(6):box('Door lattice',(x,-2.86,1.65+j*.65),(2.25,.07,.045),accent)
+    box('Door leaf',(x,-2.76,door_center),(2.28,.13,door_height),doors)
+    for dx in (-1.15,1.15):box('Door frame',(x+dx,-2.87,door_center),(.075,.09,door_height+.05),accent)
+    for j in range(6):
+        box('Door lattice',(x,-2.86,door_bottom+.18+j*(door_height-.36)/5),(2.25,.07,.045),accent)
+# A restrained lintel finishes the doorway below the wall-mounted hengaku.
+box('Entrance door head',(0,-2.84,4.97),(4.75,.22,.12),body)
 for side in (-1,1):
     for x in (3,3.65,4.3,4.95,5.6):box('Facade lattice',(side*x,-2.75,3.9),(.048,.08,4.7),accent)
     box('Porch railing',(side*6.15,-5.72,2.5),(4.5,.12,.13),accent)
@@ -111,13 +117,16 @@ for o in list(bpy.context.scene.objects):
 for x in (-3.4,3.4):
     box('Canopy pillar',(x,-7.0,3.4),(.2,.2,4.0))
     box('Canopy cap',(x,-7,5.35),(.65,.5,.3))
-# Hanging plaque and bell rope mark the entrance.
-# Mount the plaque in front of the eave, not through the roof shell.
-box('Entrance plaque',(0,-8.62,5.84),(1.25,.16,.5),body)
+# Recess the hengaku above the entrance doors, against the facade under the roof.
+# The chamber front is Y=-2.7; short concealed blocks attach the plaque to it.
+plaque_y,plaque_z=-2.98,5.37
+box('Entrance plaque',(0,plaque_y,plaque_z),(1.25,.16,.56),body)
 for x in (-.43,.43):
-    line('Plaque mounting bracket',[(x,-8.36,6.09),(x,-8.62,6.09)],.025,doors)
-for z in (5.64,6.04):line('Plaque frame',[(-.57,-8.71,z),(.57,-8.71,z)],.012,doors)
-for x in (-.57,.57):line('Plaque frame',[(x,-8.71,5.64),(x,-8.71,6.04)],.012,doors)
+    box('Plaque mounting block',(x,-2.80,plaque_z),(.10,.22,.18),body)
+for z in (plaque_z-.23,plaque_z+.23):
+    line('Plaque frame',[(-.57,plaque_y-.09,z),(.57,plaque_y-.09,z)],.012,doors)
+for x in (-.57,.57):
+    line('Plaque frame',[(x,plaque_y-.09,plaque_z-.23),(x,plaque_y-.09,plaque_z+.23)],.012,doors)
 # A small suzu below the canopy, with clearance above its suspension ring.
 bell_y,bell_z,bell_radius=-7.25,5.38,.25
 bpy.ops.mesh.primitive_uv_sphere_add(segments=24,ring_count=12,radius=bell_radius,location=(0,bell_y,bell_z))
