@@ -1,0 +1,28 @@
+import {readFile,writeFile,mkdir,cp,rm} from 'node:fs/promises';
+import {fileURLToPath} from 'node:url';
+import path from 'node:path';
+import {accepted} from '../feed.mjs';
+const root=fileURLToPath(new URL('../',import.meta.url));
+const publicRoot=path.join(root,'public'),dist=path.join(root,'dist');
+const site=new URL(process.env.SHRINE_PUBLIC_URL||'https://greyparcel.github.io/flop-shrine-web/');
+if(site.protocol!=='https:'||site.username||site.password)throw Error('Invalid public URL');
+const policy=JSON.parse(await readFile(path.join(root,'config/feed-policy.json'),'utf8'));
+if(!Array.isArray(policy.hiddenIds)||!Array.isArray(policy.hiddenDids))throw Error('Invalid policy');
+const db=JSON.parse(await readFile(path.join(root,'archive/feed.json'),'utf8'));
+if(db.schema!==2||!Array.isArray(db.wishes))throw Error('Invalid archive');
+const normalized=db.wishes.map(w=>{const p=accepted({...w,text:w.rawText??w.text},w.generation);if(!p)throw Error('Invalid archived record');return {...p,observedAt:w.observedAt};});
+const hiddenFingerprints=normalized.filter(w=>policy.hiddenIds.includes(w.id)||policy.hiddenDids.includes(w.from)).map(w=>w.fingerprint);
+const exportedPolicy={...policy,hiddenFingerprints};
+const wishes=normalized.filter(w=>!policy.hiddenIds.includes(w.id)&&!policy.hiddenDids.includes(w.from)&&!hiddenFingerprints.includes(w.fingerprint));
+const archive={room:'shrine',generation:db.generation,checkedAt:db.checkedAt,historyIncomplete:db.historyIncomplete,wishes};
+if(Buffer.byteLength(JSON.stringify(archive))>16*1024*1024)throw Error('Public archive requires pagination before publication');
+await writeFile(path.join(publicRoot,'archive.json'),JSON.stringify(archive));
+await writeFile(path.join(publicRoot,'feed-policy.json'),JSON.stringify(exportedPolicy));
+// Remove only the known build directory inside this project.
+if(path.dirname(dist)!==path.resolve(root))throw Error('Invalid build directory');
+await rm(dist,{recursive:true,force:true});await mkdir(dist,{recursive:true});
+await cp(publicRoot,dist,{recursive:true,filter:source=>path.basename(source)!=='wishes.json'});
+const prompt=await readFile(path.join(publicRoot,'agent-prompt.txt'),'utf8');
+await writeFile(path.join(dist,'agent-prompt.txt'),prompt.replaceAll('{{SHRINE_SITE_URL}}',site.href.replace(/\/$/,'')));
+await writeFile(path.join(dist,'.nojekyll'),'');
+console.log(`Static build ready: ${wishes.length} archived posts`);

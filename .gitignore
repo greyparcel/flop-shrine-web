@@ -1,0 +1,29 @@
+# Local dependencies and generated diagnostics
+node_modules/
+dist/
+public/archive.json
+public/feed-policy.json
+data/
+.cache/
+__pycache__/
+*.log
+art/browser-check.json
+art/*.png
+
+# Editable Blender scenes and recovery copies stay local / in private storage
+*.blend
+*.blend[0-9]*
+*.blend@
+
+# Credentials and local environment configuration
+.env
+.env.*
+!.env.example
+secrets/
+*.pem
+*.key
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
