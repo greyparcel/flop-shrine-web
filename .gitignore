@@ -10,6 +10,12 @@ __pycache__/
 art/browser-check.json
 art/*.png
 
+# Interrupted archive writes and editor / patch backups
+archive/*.tmp
+*.bak
+*.orig
+*.rej
+
 # Editable Blender scenes and recovery copies stay local / in private storage
 *.blend
 *.blend[0-9]*

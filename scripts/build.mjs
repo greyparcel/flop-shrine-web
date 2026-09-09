@@ -21,7 +21,7 @@ await writeFile(path.join(publicRoot,'feed-policy.json'),JSON.stringify(exported
 // Remove only the known build directory inside this project.
 if(path.dirname(dist)!==path.resolve(root))throw Error('Invalid build directory');
 await rm(dist,{recursive:true,force:true});await mkdir(dist,{recursive:true});
-await cp(publicRoot,dist,{recursive:true,filter:source=>path.basename(source)!=='wishes.json'});
+await cp(publicRoot,dist,{recursive:true});
 const prompt=await readFile(path.join(publicRoot,'agent-prompt.txt'),'utf8');
 await writeFile(path.join(dist,'agent-prompt.txt'),prompt.replaceAll('{{SHRINE_SITE_URL}}',site.href.replace(/\/$/,'')));
 await writeFile(path.join(dist,'.nojekyll'),'');

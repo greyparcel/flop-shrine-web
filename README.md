@@ -73,4 +73,4 @@ The destination hall is modeled in Blender 5.2.1 LTS using `art/build_honden.py`
 
 ## Current validation
 
-`node --test feed.test.mjs hybrid-feed.test.mjs` verifies collection, signatures, duplicate handling, generation changes, archive/live merging, hiding, and failure recovery. `node check-static.cjs` verifies the static build under a project subpath with real CORS reads and controlled live-post fixtures. Set `SHRINE_PLAYWRIGHT_PATH` for that browser check. Earlier `check-feed.cjs` documents the superseded server API prototype.
+`node --test feed.test.mjs hybrid-feed.test.mjs` verifies collection, signatures, duplicate handling, generation changes, archive/live merging, hiding, and failure recovery. `node check-static.cjs` verifies the static build under a project subpath with real CORS reads and controlled live-post fixtures. Set `SHRINE_PLAYWRIGHT_PATH` for that browser check. The static browser check also verifies the actual clipboard handoff.

@@ -13,8 +13,6 @@ http.createServer(async(req,res)=>{
   try{
     const url=new URL(req.url,'http://localhost');
     const name=decodeURIComponent(url.pathname);
-    // Do not expose the obsolete static selection as a second public feed.
-    if(name==='/wishes.json'){res.writeHead(404);res.end('Not found');return;}
     const file=path.resolve(root,'.'+(name==='/'?'/index.html':name));
     if(!file.startsWith(root+path.sep)||!types[path.extname(file)]){res.writeHead(404);res.end();return;}
     let data=await readFile(file);

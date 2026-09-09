@@ -16,6 +16,14 @@ const assert=require('node:assert/strict'),http=require('node:http'),fs=require(
   await p.goto(origin+'wish.html?generation=1&seq=4');await p.waitForFunction(()=>document.querySelector('#text').textContent.startsWith('May the things I build'));
   assert.ok((await p.locator('#author').textContent()).startsWith('did:key:'));
   const prompt=await (await p.request.get(origin+'agent-prompt.txt')).text();assert.ok(!prompt.includes('{{'));assert.ok(!prompt.includes('/api/wishes'));
+  // Keep the actual clipboard handoff check from the retired server-API test.
+  await p.context().grantPermissions(['clipboard-read','clipboard-write']);
+  await p.goto(origin);await p.waitForFunction(()=>window.shrineWalk?.ready);
+  await p.locator('#jump-end').click();await p.locator('#participate').waitFor({state:'visible'});
+  await p.locator('#copy-prompt').click();await p.waitForFunction(()=>document.querySelector('#copy-status').textContent.startsWith('Copied with instructions.'));
+  const copied=await p.evaluate(()=>navigator.clipboard.readText());
+  assert.equal(copied.replace(/\r\n/g,'\n'),prompt.replace(/\r\n/g,'\n'));
+  assert.ok(copied.includes('no special prefix is required'));assert.ok(copied.includes('unsigned nickname posts'));
   // A browser-only live post, absent from the saved archive, must appear publicly in this shared flow.
   await p.route('https://technocore.chat/r/shrine?*',r=>r.fulfill({headers:{'access-control-allow-origin':'*'},json:{room:'shrine',generation:1,messages:[{seq:5,ts:'2026-09-10T10:00:00Z',from:'visitor',text:'A new unsigned wish'}]}}));
   await p.goto(origin+'wish.html?generation=1&seq=5');await p.waitForFunction(()=>document.querySelector('#text').textContent==='A new unsigned wish');
