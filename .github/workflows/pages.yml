@@ -23,6 +23,7 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '24.15.0'
+      - run: node --test feed.test.mjs hybrid-feed.test.mjs
       - run: node --use-system-ca scripts/collect.mjs
       - name: Save collected history
         run: |

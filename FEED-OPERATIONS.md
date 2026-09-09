@@ -15,7 +15,7 @@ Current architecture (2026-09-10): static website + direct browser reads + a sep
 
 Visible browser tabs check every 30 seconds. The current walk keeps its assignments until reload. Live errors use exponential backoff and Retry-After while retaining saved content. A new generation never overwrites old generation records. Without scheduled collection, a post visible today can disappear from Technocore before it is archived.
 
-`pages-workflow.yml.example` is prepared for the publishing repository: hourly at minute 17, on main pushes, or manually. It serializes collection and deployment, commits `archive/feed.json`, builds, then deploys Pages. GitHub scheduling may be delayed or dropped. Node is fixed at 24.15.0 and Actions use verified commit SHAs. No signing key or upstream write is used. Failed runs are visible in GitHub Actions; GitHub notification delivery depends on the account's notification settings. No schedule has been activated yet.
+`.github/workflows/pages.yml` is the publishing workflow: hourly at minute 17, on main pushes, or manually. It serializes collection and deployment, commits `archive/feed.json`, builds, then deploys Pages. GitHub scheduling may be delayed or dropped. Node is fixed at 24.15.0 and Actions use verified commit SHAs. No signing key or upstream write is used. Failed runs are visible in GitHub Actions; GitHub notification delivery depends on the account's notification settings. The schedule runs after the workflow is pushed to the public repository.
 
 The public archive build stops above 16 MiB pending pagination work rather than publishing a file browsers will refuse. The collector retains up to 64 MiB. These are implementation limits, not Technocore limits.
 
@@ -25,9 +25,9 @@ Edit `config/feed-policy.json` and publish the updated build. Both archive and d
 
 ## Publication status and repository boundary
 
-The active development repository is `greyparcel/flop-shrine-web`. It is private. This repository starts with a cleaned snapshot, including Blender generators and the website GLB, excluding editable Blender scenes and study PNGs. Previous development history is retained separately in the private `greyparcel/flop-shrine` repository, which is kept as a historical backup.
+The active development repository is `greyparcel/flop-shrine-web`. It is the repository selected for public release. This repository starts with a cleaned snapshot, including Blender generators and the website GLB, excluding editable Blender scenes and study PNGs. Previous development history is retained separately in the private `greyparcel/flop-shrine` repository, which is kept as a historical backup.
 
-No GitHub Pages deployment or scheduled workflow is enabled. `pages-workflow.yml.example` remains an inactive example. Repository publication and workflow activation are separate future actions.
+GitHub Pages uses the Actions build at https://greyparcel.github.io/flop-shrine-web/ . The workflow deploys main pushes and saves room history hourly at minute 17.
 
 Blender scenes have portable file-browser paths and render destinations. The scene generators use `art/privacy.py` before saving to avoid embedding workstation paths in their file-browser state and render metadata. Editable scenes and study PNGs stay outside this repository under .gitignore. Inspect metadata in exported assets before sharing them.
 

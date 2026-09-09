@@ -1,13 +1,13 @@
 # FLOP Shrine — torii walk prototype
 
-Private development repository: greyparcel/flop-shrine-web. Clean initial history created on 2026-09-10. Public deployment is pending. Prepare and run locally:
+Source repository: greyparcel/flop-shrine-web. Website: https://greyparcel.github.io/flop-shrine-web/ . Clean initial history created on 2026-09-10. Prepare and run locally:
 
 ```powershell
 node scripts/build.mjs
 node --use-system-ca server.mjs
 ```
 
-Open http://127.0.0.1:4177/ in a browser. The server binds to this PC only; this address will not open the site on a separate phone. Mobile layout and touch have been tested with browser emulation, not a physical phone. No public deployment has been made.
+Open http://127.0.0.1:4177/ in a browser. The server binds to this PC only; this address will not open the site on a separate phone. Mobile layout and touch have been tested with browser emulation, not a physical phone. The public site is deployed separately by GitHub Actions.
 
 ## Controls
 
