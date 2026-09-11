@@ -33,12 +33,14 @@ footer{bottom:max(30px,env(safe-area-inset-bottom));align-items:flex-end}.journe
 .walk-hint small{display:block;font-size:11px;color:var(--dim);margin-top:5px}
 .mouse-cue{position:relative;display:block;flex:none;width:21px;height:32px;border:1.5px solid #00B4D8;border-radius:12px}
 .mouse-cue::after{content:"";position:absolute;top:6px;left:8px;width:3px;height:7px;border-radius:2px;background:#00B4D8;animation:wheel-cue 2s ease-in-out infinite}
-.swipe-cue{display:block;font-size:32px;line-height:1;color:#00B4D8;animation:swipe-cue 2s ease-in-out infinite}
+.mobile-hint.walk-hint{position:relative;padding-left:28px}
+.swipe-cue{position:absolute;left:0;top:var(--cue-top,0px);height:var(--cue-height,100%);width:16px;color:#00B4D8}
+.swipe-cue svg{position:absolute;display:block;width:16px;height:20px;fill:currentColor;animation:swipe-cue 2s ease-in-out infinite}
 @keyframes wheel-cue{0%,100%{transform:translateY(0);opacity:1}65%{transform:translateY(8px);opacity:.3}}
-@keyframes swipe-cue{0%,100%{transform:translateY(4px);opacity:.6}65%{transform:translateY(-4px);opacity:1}}
-body.moving .mouse-cue::after,body.moving .swipe-cue{animation-play-state:paused}
+@keyframes swipe-cue{0%,100%{top:calc(100% - 20px);opacity:.6}65%{top:0;opacity:1}}
+body.moving .mouse-cue::after,body.moving .swipe-cue svg{animation-play-state:paused}
 @media(max-width:650px){.desktop-hint.walk-hint{display:none}.mobile-hint.walk-hint{display:flex}}
-@media(prefers-reduced-motion:reduce){.mouse-cue::after,.swipe-cue{animation:none}}
+@media(prefers-reduced-motion:reduce){.mouse-cue::after,.swipe-cue svg{animation:none}}
 @media(max-width:650px){.intro{padding:16px;background:rgba(0,0,0,.5);border-radius:8px}.intro h1{margin-top:0}}
 
 .feed-update{position:absolute;z-index:3;top:85px;right:clamp(22px,4vw,70px);max-width:min(310px,60vw);text-align:right;font-size:10px;line-height:1.6;color:var(--muted)}.feed-update span:empty{display:none}#refresh-wishes{display:block;margin-left:auto;padding:5px 0;font-size:10px}#refresh-wishes[hidden]{display:none}@media(max-width:650px){.feed-update{top:78px;max-width:calc(100% - 44px)}}
