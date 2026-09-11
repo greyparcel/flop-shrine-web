@@ -429,9 +429,10 @@ document.addEventListener('pointerdown',()=>{if(inertia){inertia=0;state.target=
 canvas.addEventListener('pointerdown',e=>{if(!e.isPrimary)return;drag={id:e.pointerId,y:e.clientY,time:performance.now(),velocity:0,touch:e.pointerType==='touch'};canvas.setPointerCapture(e.pointerId);canvas.focus({preventScroll:true});});
 canvas.addEventListener('pointermove',e=>{
   if(!drag||drag.id!==e.pointerId)return;
-  const now=performance.now(),elapsed=Math.max(8,now-drag.time),amount=(drag.y-e.clientY)*.032;
+  const now=performance.now(),elapsed=Math.max(8,now-drag.time),speed=drag.touch?1.3:1;
+  const amount=(drag.y-e.clientY)*.032*speed,velocityLimit=65*speed;
   move(amount);
-  drag.velocity=drag.velocity*.25+Math.max(-65,Math.min(65,amount*1000/elapsed))*.75;
+  drag.velocity=drag.velocity*.25+Math.max(-velocityLimit,Math.min(velocityLimit,amount*1000/elapsed))*.75;
   drag.y=e.clientY;drag.time=now;
 });
 canvas.addEventListener('pointerup',e=>{
