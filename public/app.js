@@ -544,17 +544,11 @@ function frame(now){
   const tanV=Math.tan(THREE.MathUtils.degToRad(viewFov/2)),tanH=tanV*camera.aspect;
   const overviewDistance=Math.max(...overviewCorners.map(p=>p.dot(overviewDirection)+Math.max(Math.abs(p.dot(overviewRight))/tanH,Math.abs(p.dot(overviewUp))/tanV)))*1.2;
   const overviewEye=overviewCenter.clone().addScaledVector(overviewDirection,overviewDistance);
-  if(lift>0){
-    const groundEye=routePoint(state.length).add(eyeOffset);
-    const closeEye=hall.position.clone().addScaledVector(endForward,-42);closeEye.y+=38;
-    const roofEye=hall.position.clone().addScaledVector(endForward,-24);roofEye.y+=82;
-    const flight=new THREE.CatmullRomCurve3([groundEye,closeEye,roofEye,overviewEye],false,'centripetal');
-    const flightEye=flight.getPoint(aerial);
-    // Blend the ground view during a return, including RETURN TO START.
-    eye.lerp(flightEye,Math.min(1,lift*8));
-    look.lerp(hallFocus,Math.min(1,lift*8));
-    look.lerp(overviewCenter,THREE.MathUtils.smoothstep(lift,.8,1));
-  }
+  // Keep the original ascent's orientation and easing; translate eye and target together.
+  eye.lerp(overviewEye,aerial);look.lerp(overviewCenter,aerial);
+  const approachOffset=28*(256/27)*aerial*Math.pow(1-aerial,3);
+  eye.addScaledVector(endForward,approachOffset);
+  look.addScaledVector(endForward,approachOffset);
   scene.fog.density=THREE.MathUtils.lerp(.024,.0006,aerial);
   camera.position.copy(eye);
   camera.lookAt(look);
@@ -605,6 +599,7 @@ function frame(now){
 }
 requestAnimationFrame(frame);
 } catch(error){console.error(error);status.hidden=false;status.textContent='Unable to start the 3D view. Please use a browser with WebGL 2 enabled.';}
+
 
 
 
