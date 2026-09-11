@@ -517,11 +517,11 @@ function frame(now){
     const remaining=state.length-state.target;
     droneSpeed+=(Math.min(54,Math.max(12,remaining*9))-droneSpeed)*(1-Math.exp(-dt*8));
     move(droneSpeed*dt);
-    if(state.distance>=state.length-.15){state.target=state.distance=state.length;dronePhase='rise';}
+    if(state.distance>=state.length-4){state.target=state.length;dronePhase='rise';}
   }
   if(dronePhase==='rise'){lift=Math.min(1,lift+dt/10);if(lift===1){dronePhase='hold';droneLabel();}}
   if(dronePhase==='return'){lift=Math.max(0,lift-dt/3);if(lift===0)dronePhase='off';}
-  const aerial=lift*lift*(3-2*lift);
+  const aerial=.3*lift+.7*lift*lift*(3-2*lift);
   state.dronePhase=dronePhase;
   if(inertia){
     if(reduced.matches)inertia=0;
@@ -546,7 +546,7 @@ function frame(now){
   const overviewEye=overviewCenter.clone().addScaledVector(overviewDirection,overviewDistance);
   // Keep the original ascent's orientation and easing; translate eye and target together.
   eye.lerp(overviewEye,aerial);look.lerp(overviewCenter,aerial);
-  const approachOffset=28*(256/27)*aerial*Math.pow(1-aerial,3);
+  const approachOffset=48*(256/27)*aerial*Math.pow(1-aerial,3);
   eye.addScaledVector(endForward,approachOffset);
   look.addScaledVector(endForward,approachOffset);
   scene.fog.density=THREE.MathUtils.lerp(.024,.0006,aerial);
@@ -599,6 +599,7 @@ function frame(now){
 }
 requestAnimationFrame(frame);
 } catch(error){console.error(error);status.hidden=false;status.textContent='Unable to start the 3D view. Please use a browser with WebGL 2 enabled.';}
+
 
 
 
