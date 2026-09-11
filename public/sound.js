@@ -4,26 +4,21 @@ let context, gain, source, buffer;
 let enabled = false;
 let pending = false;
 let bellBuffer, bellSource, bellLoading;
-let arrivalUsed = false;
+let atShrine = false;
 function prepareBell() {
-  if (bellBuffer || bellLoading) return;
+  if (bellBuffer) return Promise.resolve();
+  if (bellLoading) return bellLoading;
   bellLoading = fetch(new URL('./audio/arrival.mp3', import.meta.url))
     .then(r => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
     .then(data => context.decodeAudioData(data))
     .then(decoded => { bellBuffer = decoded; })
-    .catch(error => console.warn('Arrival sound unavailable', error))
     .finally(() => { bellLoading = null; });
+  return bellLoading;
 }
-let resetPending = false;
-document.querySelector('#reset').addEventListener('click', () => { resetPending = true; });
-const prompt = document.querySelector('#participate');
-new MutationObserver(() => {
-  if (resetPending) {
-    if (prompt.hidden) { arrivalUsed = false; resetPending = false; }
-    return;
-  }
-  if (prompt.hidden || arrivalUsed) return;
-  arrivalUsed = true;
+document.addEventListener('shrine-arrival', event => {
+  const entering = event.detail.arrived && !atShrine;
+  atShrine = event.detail.arrived;
+  if (!entering) return;
   // Never play a late bell when sound is enabled or finishes loading after arrival.
   if (!enabled || !bellBuffer || context.state !== 'running') return;
   const node = context.createBufferSource();
@@ -34,7 +29,7 @@ new MutationObserver(() => {
   node.onended = () => { node.disconnect(); volume.disconnect(); if (bellSource === node) bellSource = null; };
   bellSource = node;
   node.start();
-}).observe(prompt, { attributes: true, attributeFilter: ['hidden'] });
+});
 function paint(label = enabled ? 'ON' : 'OFF') {
   button.querySelector('span').textContent = label;
   button.setAttribute('aria-pressed', String(enabled));
@@ -57,7 +52,7 @@ button.addEventListener('click', async () => {
   try {
     context ??= new (window.AudioContext || window.webkitAudioContext)();
     await context.resume();
-    prepareBell();
+    await prepareBell();
     if (!buffer) {
       const response = await fetch(new URL('./audio/deep-sanctuary-loop.wav', import.meta.url));
       if (!response.ok) throw new Error(`Audio: ${response.status}`);
