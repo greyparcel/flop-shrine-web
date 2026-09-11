@@ -40,6 +40,20 @@ const approach=new THREE.CubicBezierCurve3(pathEnd.clone(),pathEnd.clone().addSc
 approach.arcLengthDivisions=1024;
 const approachLength=approach.getLength();
 state.length=curveLength+approachLength;
+const walkStorageKey='flop-shrine-walk-position';
+try {
+  const saved=JSON.parse(sessionStorage.getItem(walkStorageKey)||'null');
+  if(saved && Number.isFinite(saved.distance)) state.target=state.distance=Math.max(0,Math.min(state.length,saved.distance));
+} catch {}
+function saveWalkPosition(){
+  try {sessionStorage.setItem(walkStorageKey,JSON.stringify({distance:state.distance}));} catch {}
+}
+window.addEventListener('pagehide',saveWalkPosition);
+document.addEventListener('click',event=>{
+  const link=event.target.closest?.('a[href]');
+  if(link && new URL(link.href).origin===location.origin) saveWalkPosition();
+});
+
 state.gateSpacing=(curveLength-18)/(state.gateCount-1);
 state.lastGateDistance=curveLength-9;
 state.torchStartDistance=curveLength+5;
@@ -403,18 +417,42 @@ addEventListener('resize',resize);resize();
 const clamp=v=>Math.max(0,Math.min(state.length,v));
 function move(amount){state.target=clamp(state.target+amount);}
 document.querySelector('#experience').addEventListener('wheel',e=>{e.preventDefault();const unit=e.deltaMode===1?16:e.deltaMode===2?innerHeight:1;move(Math.max(-260,Math.min(260,e.deltaY*unit))*.022);},{passive:false});
-let drag=null;
-canvas.addEventListener('pointerdown',e=>{if(!e.isPrimary)return;drag={id:e.pointerId,y:e.clientY};canvas.setPointerCapture(e.pointerId);canvas.focus({preventScroll:true});});
-canvas.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;move((drag.y-e.clientY)*.032);drag.y=e.clientY;});
-for(const event of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(event,()=>{drag=null;});
+let drag=null,inertia=0;
+canvas.addEventListener('wheel',()=>{inertia=0;},{passive:true});
+document.addEventListener('pointerdown',()=>{if(inertia){inertia=0;state.target=state.distance;}},true);
+canvas.addEventListener('pointerdown',e=>{if(!e.isPrimary)return;drag={id:e.pointerId,y:e.clientY,time:performance.now(),velocity:0,touch:e.pointerType==='touch'};canvas.setPointerCapture(e.pointerId);canvas.focus({preventScroll:true});});
+canvas.addEventListener('pointermove',e=>{
+  if(!drag||drag.id!==e.pointerId)return;
+  const now=performance.now(),elapsed=Math.max(8,now-drag.time),amount=(drag.y-e.clientY)*.032;
+  move(amount);
+  drag.velocity=drag.velocity*.25+Math.max(-65,Math.min(65,amount*1000/elapsed))*.75;
+  drag.y=e.clientY;drag.time=now;
+});
+canvas.addEventListener('pointerup',e=>{
+  if(!drag||drag.id!==e.pointerId)return;
+  inertia=drag.touch&&!reduced.matches&&performance.now()-drag.time<100?drag.velocity:0;
+  drag=null;
+});
+for(const event of ['pointercancel','lostpointercapture'])canvas.addEventListener(event,()=>{if(drag)inertia=0;drag=null;});
 addEventListener('keydown',e=>{
+  inertia=0;
   if(e.target instanceof HTMLButtonElement||e.target instanceof HTMLAnchorElement)return;
   const steps={ArrowUp:2.4,ArrowDown:-2.4,PageDown:12,PageUp:-12,' ':6};
   if(e.key in steps){e.preventDefault();move(steps[e.key]);}
   if(e.key==='Home'){e.preventDefault();state.target=0;}
   if(e.key==='End'){e.preventDefault();state.target=state.length;}
 });
-document.querySelector('#reset').onclick=()=>{state.target=0;};
+document.querySelector('#reset').onclick=()=>{inertia=0;state.target=0;};
+const wishesButton=document.querySelector('#wishes');
+let wishesVisible=true;
+try{wishesVisible=sessionStorage.getItem('flop-shrine-wishes')!=='off';}catch{}
+function syncWishes(){
+  document.body.classList.toggle('wishes-off',!wishesVisible);
+  wishesButton.setAttribute('aria-pressed',String(wishesVisible));
+  wishesButton.querySelector('span').textContent=wishesVisible?'ON':'OFF';
+}
+syncWishes();
+wishesButton.onclick=()=>{wishesVisible=!wishesVisible;syncWishes();try{sessionStorage.setItem('flop-shrine-wishes',wishesVisible?'on':'off');}catch{}};
 const jumpEnd=document.querySelector('#jump-end');
 jumpEnd.hidden=!['localhost','127.0.0.1','[::1]'].includes(location.hostname);
 jumpEnd.onclick=()=>{state.target=state.length;state.distance=state.length;};
@@ -443,10 +481,16 @@ function pointAtDistance(distance,out){
 }
 function frame(now){
   const dt=Math.min((now-last)/1000,.05);last=now;
+  if(inertia){
+    if(reduced.matches)inertia=0;
+    move(inertia*(1-Math.exp(-2.4*dt))/2.4);
+    inertia*=Math.exp(-2.4*dt);
+    if(Math.abs(inertia)<.1||state.target===0||state.target===state.length)inertia=0;
+  }
   const difference=state.target-state.distance;
   state.distance=reduced.matches?state.target:state.distance+difference*(1-Math.exp(-dt*7));
   if(Math.abs(state.target-state.distance)<.001)state.distance=state.target;
-  state.activeWishSeq=wishDisplay.update(state.distance);
+  state.activeWishSeq=wishDisplay.update(state.distance,wishesVisible);
   pointAtDistance(state.distance,eye).add(eyeOffset);
   pointAtDistance(state.distance+4,look).add(eyeOffset);
   const arrival=THREE.MathUtils.smoothstep(state.distance,state.length-22,state.length);

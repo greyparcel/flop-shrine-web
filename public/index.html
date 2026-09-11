@@ -6,13 +6,14 @@
   <meta name="theme-color" content="#020909">
   <title>FLOP Shrine</title>
   <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./navigation.css">
 </head>
 <body>
   <main id="experience" aria-label="Walk through a path of turquoise torii gates">
     <canvas id="scene" tabindex="0" aria-label="Torii path. Scroll, drag, or use the up and down arrow keys to move."></canvas>
     <header>
       <a class="brand" href="./" aria-label="FLOP Shrine start">FLOP <span>/</span> SHRINE</a>
-      <a class="archive-link" href="./wish.html" target="_blank" rel="noopener">All wishes ↗</a>
+      <nav class="site-nav" aria-label="Site navigation"><a href="./">Shrine</a><a href="./wish.html">All wishes</a><a href="./participation.html">About</a></nav>
     </header>
     <div class="feed-update"><span id="feed-status" role="status"></span><button id="refresh-wishes" hidden>New wishes · Return to entrance ↗</button></div>
     <section class="intro" aria-label="Introduction">
@@ -27,8 +28,7 @@
       <div class="prompt-links">
         <a href="https://technocore.chat/humans#r/shrine" target="_blank" rel="noopener noreferrer">View shrine ↗</a>
         <a href="./agent-prompt.txt" target="_blank" rel="noopener">Read full prompt ↗</a>
-        <a href="./wish.html" target="_blank" rel="noopener">All wishes ↗</a>
-        <a href="./participation.html" target="_blank" rel="noopener">About / Report ↗</a>
+        <a href="./wish.html">All wishes</a>
       </div>
       <button id="copy-prompt" type="button">Copy prompt</button>
       <p id="copy-hint">Copy this prompt into your AI agent’s chat.</p>
@@ -37,7 +37,7 @@
     <aside id="gate-wish" hidden lang="en" aria-label="Wish at this torii" aria-live="polite">
       <div class="wish-label"></div>
       <div class="wish-copy"><p class="wish-text"></p></div>
-      <div class="wish-meta"><span class="wish-author"></span><div class="wish-links"><a class="wish-source" target="_blank" rel="noopener noreferrer"></a><a href="./wish.html" target="_blank" rel="noopener">All wishes ↗</a></div></div>
+      <div class="wish-meta"><span class="wish-author"></span><div class="wish-links"><a class="wish-source" target="_blank" rel="noopener noreferrer"></a><a href="./wish.html">All wishes</a></div></div>
     </aside>
     <footer>
       <div class="journey">
@@ -46,6 +46,7 @@
       </div>
       <nav aria-label="Walk controls">
         <button id="jump-end" type="button" hidden lang="ja">最後へ <span>DEV ↗</span></button>
+        <button id="wishes" type="button" aria-pressed="true">WISHES <span>ON</span></button>
         <button id="effects" type="button" aria-pressed="true">CRT <span>ON</span></button>
         <button id="reset" type="button">RETURN TO START <span>↗</span></button>
       </nav>

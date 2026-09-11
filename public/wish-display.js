@@ -42,13 +42,13 @@ export async function createWishDisplay({gateSpacing,gateCount}){
     visibilityAnimation=card.animate([{opacity},{opacity:next?1:0}],{duration:360,easing:'ease-in-out'});
     visibilityAnimation.onfinish=()=>{if(!visible)card.hidden=true;};
   }
-  function update(distance){
+  function update(distance,enabled=true){
     if(!entries.length)return null;
     // Start as the nearby gate leaves the view, slightly before the camera crosses it.
     const visualLead=1.8;
     const interval=Math.floor((distance-(9-visualLead))/gateSpacing);
     const entry=interval>=0&&interval<gateCount?entries[interval]:null;
-    const candidate=entry&&!removed.has(entry.id)?entry:null;
+    const candidate=enabled&&entry&&!removed.has(entry.id)?entry:null;
     if(!candidate){setVisible(false);return null;}
     if(candidate.id!==shown){
       previous?.remove();animation?.cancel();

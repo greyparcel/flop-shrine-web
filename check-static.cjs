@@ -19,6 +19,22 @@ const assert=require('node:assert/strict'),http=require('node:http'),fs=require(
   // Keep the actual clipboard handoff check from the retired server-API test.
   await p.context().grantPermissions(['clipboard-read','clipboard-write']);
   await p.goto(origin);await p.waitForFunction(()=>window.shrineWalk?.ready);
+  await p.keyboard.press('PageDown');await p.waitForTimeout(1500);
+  assert.ok(await p.locator('#gate-wish').isVisible());
+  await p.locator('#wishes').click();await p.waitForTimeout(450);
+  assert.ok(!await p.locator('#gate-wish').isVisible());
+  await p.locator('#wishes').click();await p.waitForTimeout(450);
+  assert.ok(await p.locator('#gate-wish').isVisible());
+  const touch=await p.context().newCDPSession(p);
+  await touch.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:500,y:500}]});
+  for(let y=470;y>=290;y-=30){await p.waitForTimeout(16);await touch.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:500,y}]});}
+  await touch.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  const released=await p.evaluate(()=>window.shrineWalk.target);await p.waitForTimeout(300);
+  assert.ok(await p.evaluate(()=>window.shrineWalk.target)>released+1);
+  await touch.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:500,y:500}]});
+  const stopped=await p.evaluate(()=>window.shrineWalk.target);await p.waitForTimeout(200);
+  assert.equal(await p.evaluate(()=>window.shrineWalk.target),stopped);
+  await touch.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
   await p.locator('#jump-end').click();await p.locator('#participate').waitFor({state:'visible'});
   await p.locator('#copy-prompt').click();await p.waitForFunction(()=>document.querySelector('#copy-status').textContent.startsWith('Copied with instructions.'));
   const copied=await p.evaluate(()=>navigator.clipboard.readText());

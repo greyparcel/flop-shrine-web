@@ -1,5 +1,7 @@
 :root{--brand:#00b4d8;--night:#02090b;--muted:color-mix(in srgb,var(--brand) 55%,#84989c);--pale:color-mix(in srgb,var(--brand) 25%,white);--border:color-mix(in srgb,var(--brand) 28%,#071014);--panel:color-mix(in srgb,var(--brand) 7%,#020608);--button:color-mix(in srgb,var(--brand) 20%,#03090c);--hover:color-mix(in srgb,var(--brand) 30%,#03090c)}
 :root{color-scheme:dark;--ink:var(--brand);--dim:var(--muted);--bg:var(--night);font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+body.wishes-off #gate-wish{display:none}
+footer nav{flex-wrap:wrap;justify-content:flex-end} @media(max-width:650px){footer nav{gap:8px 14px}footer nav button span{margin-left:4px}}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg)}
 button,a{-webkit-tap-highlight-color:transparent}button:focus-visible,a:focus-visible,canvas:focus-visible{outline:1px solid var(--ink);outline-offset:6px}
 #experience{position:relative;width:100%;height:100%;height:100dvh;isolation:isolate}#scene{display:block;width:100%;height:100%;touch-action:none;outline:none}
@@ -26,5 +28,6 @@ footer{bottom:max(30px,env(safe-area-inset-bottom));align-items:flex-end}.journe
 .archive-link{pointer-events:auto;flex-shrink:0;color:var(--muted);font-size:11px;letter-spacing:.06em;text-decoration:none;padding:12px 0}.archive-link:hover{color:var(--pale)}@media(max-width:650px){.archive-link{font-size:10px}}
 
 .intro .intro-description{font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.5;color:var(--pale);margin:0 0 8px}
+@media(max-width:650px){.intro{padding:16px;background:rgba(0,0,0,.5);border-radius:8px}.intro h1{margin-top:0}}
 
 .feed-update{position:absolute;z-index:3;top:85px;right:clamp(22px,4vw,70px);max-width:min(310px,60vw);text-align:right;font-size:10px;line-height:1.6;color:var(--muted)}.feed-update span:empty{display:none}#refresh-wishes{display:block;margin-left:auto;padding:5px 0;font-size:10px}#refresh-wishes[hidden]{display:none}@media(max-width:650px){.feed-update{top:78px;max-width:calc(100% - 44px)}}
