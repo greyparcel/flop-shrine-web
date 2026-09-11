@@ -50,3 +50,15 @@ body.moving .mouse-cue::after,body.moving .swipe-arrow{animation-play-state:paus
 
 #participate{touch-action:pinch-zoom}
 
+footer .control-desktop,footer .control-mobile{font-weight:inherit}
+footer .control-mobile{display:none}
+@media(max-width:650px){
+  footer nav{display:flex;flex-wrap:nowrap;justify-content:space-between;gap:4px;width:100%}
+  footer nav button{flex:0 0 auto;min-width:32px;min-height:44px;white-space:nowrap;letter-spacing:0}
+  footer nav button span{margin-left:2px}
+  footer .control-desktop{display:none}
+  footer .control-mobile{display:inline}
+  footer #reset{width:32px;padding:6px 0}
+  footer .return-icon{font-size:23px;line-height:1}
+  footer #jump-end{position:absolute;right:0;bottom:calc(100% + 10px)}
+}
