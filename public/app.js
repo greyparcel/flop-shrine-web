@@ -421,6 +421,21 @@ function resize(){
 }
 addEventListener('resize',resize);resize();
 const clamp=v=>Math.max(0,Math.min(state.length,v));
+let dronePhase='off',droneSpeed=0,lift=0;
+const droneButton=document.querySelector('#drone');
+const overviewBounds=new THREE.Box3();
+for(let i=0;i<=100;i++)overviewBounds.expandByPoint(routePoint(state.length*i/100));
+overviewBounds.expandByPoint(hallFocus);overviewBounds.expandByScalar(16);
+const overviewCenter=overviewBounds.getCenter(new THREE.Vector3());
+const overviewDirection=new THREE.Vector3(.25,1,.65).normalize();
+const overviewRight=new THREE.Vector3().crossVectors(new THREE.Vector3(0,1,0),overviewDirection).normalize();
+const overviewUp=new THREE.Vector3().crossVectors(overviewDirection,overviewRight).normalize();
+const overviewCorners=[];
+for(const x of [overviewBounds.min.x,overviewBounds.max.x])for(const y of [overviewBounds.min.y,overviewBounds.max.y])for(const z of [overviewBounds.min.z,overviewBounds.max.z])overviewCorners.push(new THREE.Vector3(x,y,z).sub(overviewCenter));
+function droneLabel(){droneButton.setAttribute('aria-pressed',String(dronePhase!=='off'&&dronePhase!=='return'));droneButton.querySelector('span').textContent=dronePhase==='hold'?'END':dronePhase==='off'||dronePhase==='return'?'OFF':'ON';}
+function stopDrone(){if(dronePhase==='off'||dronePhase==='return')return;dronePhase=lift>0?'return':'off';droneSpeed=0;state.target=state.distance;droneLabel();}
+droneButton.onclick=()=>{if(dronePhase!=='off'&&dronePhase!=='return'){stopDrone();return;}lift=0;inertia=0;state.target=state.distance=0;droneSpeed=0;dronePhase='walk';droneLabel();};
+document.querySelector('#experience').addEventListener('wheel',stopDrone,{passive:true});
 function move(amount){state.target=clamp(state.target+amount);}
 document.querySelector('#experience').addEventListener('wheel',e=>{e.preventDefault();const unit=e.deltaMode===1?16:e.deltaMode===2?innerHeight:1;move(Math.max(-260,Math.min(260,e.deltaY*unit))*.022);},{passive:false});
 let drag=null,inertia=0;
@@ -433,6 +448,7 @@ for(const surface of [canvas,wishPanel,promptPanel]){
 surface.addEventListener('pointerdown',e=>{if(!e.isPrimary){drag=null;inertia=0;state.target=state.distance;return;}drag={id:e.pointerId,y:e.clientY,time:performance.now(),velocity:0,touch:e.pointerType==='touch',travel:0};if(surface===canvas){canvas.setPointerCapture(e.pointerId);canvas.focus({preventScroll:true});}});
 surface.addEventListener('pointermove',e=>{
   if(!drag||drag.id!==e.pointerId)return;
+  stopDrone();
   const now=performance.now(),elapsed=Math.max(8,now-drag.time),speed=drag.touch?1.3:1;
   const amount=(drag.y-e.clientY)*.032*speed,velocityLimit=65*speed;
   drag.travel+=Math.abs(drag.y-e.clientY);
@@ -452,12 +468,13 @@ for(const panel of [wishPanel,promptPanel])panel.addEventListener('click',e=>{if
 addEventListener('keydown',e=>{
   inertia=0;
   if(e.target instanceof HTMLButtonElement||e.target instanceof HTMLAnchorElement)return;
+  stopDrone();
   const steps={ArrowUp:2.4,ArrowDown:-2.4,PageDown:12,PageUp:-12,' ':6};
   if(e.key in steps){e.preventDefault();move(steps[e.key]);}
   if(e.key==='Home'){e.preventDefault();state.target=0;}
   if(e.key==='End'){e.preventDefault();state.target=state.length;}
 });
-document.querySelector('#reset').onclick=()=>{inertia=0;state.target=0;};
+document.querySelector('#reset').onclick=()=>{stopDrone();inertia=0;state.target=0;};
 const wishesButton=document.querySelector('#wishes');
 let wishesVisible=true;
 try{wishesVisible=sessionStorage.getItem('flop-shrine-wishes')!=='off';}catch{}
@@ -496,6 +513,16 @@ function pointAtDistance(distance,out){
 }
 function frame(now){
   const dt=Math.min((now-last)/1000,.05);last=now;
+  if(dronePhase==='walk'){
+    const remaining=state.length-state.target;
+    droneSpeed+=(Math.min(6,Math.max(.7,remaining*.8))-droneSpeed)*(1-Math.exp(-dt*1.5));
+    move(droneSpeed*dt);
+    if(state.distance>=state.length-.15){state.target=state.distance=state.length;dronePhase='rise';}
+  }
+  if(dronePhase==='rise'){lift=Math.min(1,lift+dt/10);if(lift===1){dronePhase='hold';droneLabel();}}
+  if(dronePhase==='return'){lift=Math.max(0,lift-dt/3);if(lift===0)dronePhase='off';}
+  const aerial=lift*lift*(3-2*lift);
+  state.dronePhase=dronePhase;
   if(inertia){
     if(reduced.matches)inertia=0;
     move(inertia*(1-Math.exp(-2.4*dt))/2.4);
@@ -505,7 +532,7 @@ function frame(now){
   const difference=state.target-state.distance;
   state.distance=reduced.matches?state.target:state.distance+difference*(1-Math.exp(-dt*7));
   if(Math.abs(state.target-state.distance)<.001)state.distance=state.target;
-  state.activeWishSeq=wishDisplay.update(state.distance,wishesVisible);
+  state.activeWishSeq=wishDisplay.update(state.distance,wishesVisible&&lift===0);
   pointAtDistance(state.distance,eye).add(eyeOffset);
   pointAtDistance(state.distance+4,look).add(eyeOffset);
   const arrival=THREE.MathUtils.smoothstep(state.distance,state.length-22,state.length);
@@ -513,11 +540,17 @@ function frame(now){
   // Open the portrait framing enough to keep both roof tips visible at arrival.
   const viewFov=innerWidth<650?THREE.MathUtils.lerp(74,80,arrival):THREE.MathUtils.lerp(62,58,arrival);
   if(Math.abs(camera.fov-viewFov)>.001){camera.fov=viewFov;camera.updateProjectionMatrix();}
+  const farPlane=lift>0?3000:650;if(camera.far!==farPlane){camera.far=farPlane;camera.updateProjectionMatrix();}
+  const tanV=Math.tan(THREE.MathUtils.degToRad(viewFov/2)),tanH=tanV*camera.aspect;
+  const overviewDistance=Math.max(...overviewCorners.map(p=>p.dot(overviewDirection)+Math.max(Math.abs(p.dot(overviewRight))/tanH,Math.abs(p.dot(overviewUp))/tanV)))*1.2;
+  const overviewEye=overviewCenter.clone().addScaledVector(overviewDirection,overviewDistance);
+  eye.lerp(overviewEye,aerial);look.lerp(overviewCenter,aerial);
+  scene.fog.density=THREE.MathUtils.lerp(.024,.0006,aerial);
   camera.position.copy(eye);
   camera.lookAt(look);
   // The hall alone ignores the shared fog. It emerges over a short distance band.
   const hallDistance=camera.position.distanceTo(hall.position);
-  const reveal=1-THREE.MathUtils.smoothstep(hallDistance,84,94);
+  const reveal=Math.max(aerial,1-THREE.MathUtils.smoothstep(hallDistance,84,94));
   hall.visible=reveal>.001;
   for(const entry of hallMaterials)entry.material.color.copy(scene.background).lerp(entry.color,reveal);
   // Surface illumination follows body visibility only; lamp strength stays constant.
@@ -528,7 +561,7 @@ function frame(now){
   fireMaterial.uniforms.still.value=Number(reduced.matches);
   for(const fire of torchFlames)fire.quaternion.copy(camera.quaternion);
   camera.updateMatrixWorld();
-  const arrived=state.distance>state.length-1;
+  const arrived=state.distance>state.length-1&&lift===0&&dronePhase==='off';
   document.querySelector('#participate').hidden=!arrived;
   document.body.classList.toggle('arrived',arrived);
   if(arrived){
