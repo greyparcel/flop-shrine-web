@@ -6,7 +6,7 @@ import {normalize,parseRecords,mergePosts} from './public/feed-model.js';
 const saved=JSON.parse(await readFile(new URL('./archive/feed.json',import.meta.url),'utf8'));
 const unsigned=(seq,generation=1)=>({seq,generation,ts:`2026-09-10T00:${String(seq%60).padStart(2,'0')}:00Z`,from:'visitor',text:`Wish ${seq}`});
 function fixture(){
-  let time=100000,policy={hiddenIds:[],hiddenDids:[]},archive={room:'shrine',wishes:saved.wishes,checkedAt:saved.checkedAt},live={room:'shrine',generation:1,messages:[unsigned(5)]},down=false,policyDown=false,reads=0;
+  let time=100000,policy={hiddenIds:[],hiddenDids:[]},archive={room:'shrine',wishes:saved.wishes.filter(w=>w.generation===1&&w.seq<=4),checkedAt:saved.checkedAt},live={room:'shrine',generation:1,messages:[unsigned(5)]},down=false,policyDown=false,reads=0;
   const get=createHybridFeed({now:()=>time,fetchImpl:async url=>{
     if(url==='./feed-policy.json'){if(policyDown)return new Response('',{status:503});return Response.json(policy);}
     if(url==='./archive.json')return Response.json(archive);
@@ -40,3 +40,4 @@ test('live failure preserves saved content and respects retry-after; repeated un
   const a=await normalize(unsigned(1),1),b=await normalize({...unsigned(1),seq:2},1);
   assert.equal(mergePosts([a],[a,b]).length,2);
 });
+
