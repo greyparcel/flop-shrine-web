@@ -534,10 +534,8 @@ function frame(now){
   const difference=state.target-state.distance;
   state.distance=reduced.matches?state.target:state.distance+difference*(1-Math.exp(-dt*7));
   if(Math.abs(state.target-state.distance)<.001)state.distance=state.target;
-  // Arrival is independent of the prompt and also occurs during a drone flight.
-  // Twelve metres of separation re-arms it without ringing at every small scroll.
-  const nearShrine=soundAtShrine?state.distance>state.length-12:state.distance>state.length-1;
-  if(nearShrine!==soundAtShrine){soundAtShrine=nearShrine;document.dispatchEvent(new CustomEvent('shrine-arrival',{detail:{arrived:nearShrine}}));}
+  // Re-arm after leaving the shrine, without ringing on small scroll movements.
+  if(soundAtShrine&&state.distance<=state.length-12){soundAtShrine=false;document.dispatchEvent(new CustomEvent('shrine-arrival',{detail:{arrived:false}}));}
   state.activeWishSeq=wishDisplay.update(state.distance,wishesVisible&&lift===0);
   pointAtDistance(state.distance,eye).add(eyeOffset);
   pointAtDistance(state.distance+4,look).add(eyeOffset);
@@ -574,6 +572,8 @@ function frame(now){
   camera.updateMatrixWorld();
   const arrived=state.distance>state.length-1&&lift===0&&dronePhase==='off';
   document.querySelector('#participate').hidden=!arrived;
+  // Ring only when the final prompt is shown, never while the drone is moving.
+  if(arrived&&!soundAtShrine){soundAtShrine=true;document.dispatchEvent(new CustomEvent('shrine-arrival',{detail:{arrived:true}}));}
   document.body.classList.toggle('arrived',arrived);
   if(arrived){
     promptScreen.copy(promptAnchor).project(camera);
@@ -606,7 +606,6 @@ function frame(now){
 }
 requestAnimationFrame(frame);
 } catch(error){console.error(error);status.hidden=false;status.textContent='Unable to start the 3D view. Please use a browser with WebGL 2 enabled.';}
-
 
 
 
