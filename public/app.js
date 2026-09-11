@@ -435,6 +435,7 @@ for(const x of [overviewBounds.min.x,overviewBounds.max.x])for(const y of [overv
 function droneLabel(){droneButton.setAttribute('aria-pressed',String(dronePhase!=='off'&&dronePhase!=='return'));droneButton.querySelector('span').textContent=dronePhase==='hold'?'END':dronePhase==='off'||dronePhase==='return'?'OFF':'ON';}
 function stopDrone(){if(dronePhase==='off'||dronePhase==='return')return;dronePhase=lift>0?'return':'off';droneSpeed=0;state.target=state.distance;droneLabel();}
 droneButton.onclick=()=>{if(dronePhase!=='off'&&dronePhase!=='return'){stopDrone();return;}lift=0;inertia=0;state.target=state.distance;droneSpeed=37.8;dronePhase='walk';droneLabel();};
+document.querySelector('#drone-view').onclick=()=>droneButton.click();
 document.querySelector('#experience').addEventListener('wheel',stopDrone,{passive:true});
 function move(amount){state.target=clamp(state.target+amount);}
 document.querySelector('#experience').addEventListener('wheel',e=>{e.preventDefault();const unit=e.deltaMode===1?16:e.deltaMode===2?innerHeight:1;move(Math.max(-260,Math.min(260,e.deltaY*unit))*.022);},{passive:false});
@@ -600,7 +601,6 @@ function frame(now){
 }
 requestAnimationFrame(frame);
 } catch(error){console.error(error);status.hidden=false;status.textContent='Unable to start the 3D view. Please use a browser with WebGL 2 enabled.';}
-
 
 
 
