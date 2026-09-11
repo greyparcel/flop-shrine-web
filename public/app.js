@@ -553,7 +553,7 @@ function frame(now){
     // Blend the ground view during a return, including RETURN TO START.
     eye.lerp(flightEye,Math.min(1,lift*8));
     look.lerp(hallFocus,Math.min(1,lift*8));
-    look.lerp(overviewCenter,THREE.MathUtils.smoothstep(lift,.45,1));
+    look.lerp(overviewCenter,THREE.MathUtils.smoothstep(lift,.8,1));
   }
   scene.fog.density=THREE.MathUtils.lerp(.024,.0006,aerial);
   camera.position.copy(eye);
@@ -605,6 +605,7 @@ function frame(now){
 }
 requestAnimationFrame(frame);
 } catch(error){console.error(error);status.hidden=false;status.textContent='Unable to start the 3D view. Please use a browser with WebGL 2 enabled.';}
+
 
 
 
