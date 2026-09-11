@@ -427,11 +427,7 @@ const overviewBounds=new THREE.Box3();
 for(let i=0;i<=100;i++)overviewBounds.expandByPoint(routePoint(state.length*i/100));
 overviewBounds.expandByPoint(hallFocus);overviewBounds.expandByScalar(16);
 const overviewCenter=overviewBounds.getCenter(new THREE.Vector3());
-// Keep the entire flight in the shrine's front-to-back plane, without orbiting.
-const centerAlong=overviewCenter.clone().sub(hall.position).dot(endForward);
-overviewCenter.x=hall.position.x+endForward.x*centerAlong;
-overviewCenter.z=hall.position.z+endForward.z*centerAlong;
-const overviewDirection=endForward.clone().multiplyScalar(-.65).add(new THREE.Vector3(0,1,0)).normalize();
+const overviewDirection=new THREE.Vector3(.25,1,.65).normalize();
 const overviewRight=new THREE.Vector3().crossVectors(new THREE.Vector3(0,1,0),overviewDirection).normalize();
 const overviewUp=new THREE.Vector3().crossVectors(overviewDirection,overviewRight).normalize();
 const overviewCorners=[];
@@ -553,15 +549,11 @@ function frame(now){
     const closeEye=hall.position.clone().addScaledVector(endForward,-42);closeEye.y+=38;
     const roofEye=hall.position.clone().addScaledVector(endForward,-24);roofEye.y+=82;
     const flight=new THREE.CatmullRomCurve3([groundEye,closeEye,roofEye,overviewEye],false,'centripetal');
-    // Arc-length sampling avoids slowing down at the closely spaced roof waypoints.
-    const flightEye=flight.getPointAt(aerial);
+    const flightEye=flight.getPoint(aerial);
     // Blend the ground view during a return, including RETURN TO START.
     eye.lerp(flightEye,Math.min(1,lift*8));
     look.lerp(hallFocus,Math.min(1,lift*8));
     look.lerp(overviewCenter,THREE.MathUtils.smoothstep(lift,.45,1));
-    const forwardDistance=Math.max(10,look.clone().sub(eye).dot(endForward));
-    look.x=eye.x+endForward.x*forwardDistance;
-    look.z=eye.z+endForward.z*forwardDistance;
   }
   scene.fog.density=THREE.MathUtils.lerp(.024,.0006,aerial);
   camera.position.copy(eye);
@@ -613,6 +605,8 @@ function frame(now){
 }
 requestAnimationFrame(frame);
 } catch(error){console.error(error);status.hidden=false;status.textContent='Unable to start the 3D view. Please use a browser with WebGL 2 enabled.';}
+
+
 
 
 
