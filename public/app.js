@@ -434,7 +434,7 @@ const overviewCorners=[];
 for(const x of [overviewBounds.min.x,overviewBounds.max.x])for(const y of [overviewBounds.min.y,overviewBounds.max.y])for(const z of [overviewBounds.min.z,overviewBounds.max.z])overviewCorners.push(new THREE.Vector3(x,y,z).sub(overviewCenter));
 function droneLabel(){droneButton.setAttribute('aria-pressed',String(dronePhase!=='off'&&dronePhase!=='return'));droneButton.querySelector('span').textContent=dronePhase==='hold'?'END':dronePhase==='off'||dronePhase==='return'?'OFF':'ON';}
 function stopDrone(){if(dronePhase==='off'||dronePhase==='return')return;dronePhase=lift>0?'return':'off';droneSpeed=0;state.target=state.distance;droneLabel();}
-droneButton.onclick=()=>{if(dronePhase!=='off'&&dronePhase!=='return'){stopDrone();return;}lift=0;inertia=0;state.target=state.distance=0;droneSpeed=378;dronePhase='walk';droneLabel();};
+droneButton.onclick=()=>{if(dronePhase!=='off'&&dronePhase!=='return'){stopDrone();return;}lift=0;inertia=0;state.target=state.distance=0;droneSpeed=113.4;dronePhase='walk';droneLabel();};
 document.querySelector('#experience').addEventListener('wheel',stopDrone,{passive:true});
 function move(amount){state.target=clamp(state.target+amount);}
 document.querySelector('#experience').addEventListener('wheel',e=>{e.preventDefault();const unit=e.deltaMode===1?16:e.deltaMode===2?innerHeight:1;move(Math.max(-260,Math.min(260,e.deltaY*unit))*.022);},{passive:false});
@@ -515,7 +515,7 @@ function frame(now){
   const dt=Math.min((now-last)/1000,.05);last=now;
   if(dronePhase==='walk'){
     const remaining=state.length-state.target;
-    droneSpeed+=(Math.min(540,Math.max(120,remaining*90))-droneSpeed)*(1-Math.exp(-dt*8));
+    droneSpeed+=(Math.min(162,Math.max(36,remaining*27))-droneSpeed)*(1-Math.exp(-dt*8));
     move(droneSpeed*dt);
     if(state.distance>=state.length-.15){state.target=state.distance=state.length;dronePhase='rise';}
   }
@@ -595,6 +595,7 @@ function frame(now){
 }
 requestAnimationFrame(frame);
 } catch(error){console.error(error);status.hidden=false;status.textContent='Unable to start the 3D view. Please use a browser with WebGL 2 enabled.';}
+
 
 
 
