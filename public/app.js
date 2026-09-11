@@ -554,7 +554,8 @@ function frame(now){
   camera.lookAt(look);
   // The hall alone ignores the shared fog. It emerges over a short distance band.
   const hallDistance=camera.position.distanceTo(hall.position);
-  const reveal=Math.max(aerial,1-THREE.MathUtils.smoothstep(hallDistance,84,94));
+  // Once airborne, keep the hall revealed through ascent, overview and return.
+  const reveal=lift>0?1:1-THREE.MathUtils.smoothstep(hallDistance,84,94);
   hall.visible=reveal>.001;
   for(const entry of hallMaterials)entry.material.color.copy(scene.background).lerp(entry.color,reveal);
   // Surface illumination follows body visibility only; lamp strength stays constant.
@@ -599,7 +600,6 @@ function frame(now){
 }
 requestAnimationFrame(frame);
 } catch(error){console.error(error);status.hidden=false;status.textContent='Unable to start the 3D view. Please use a browser with WebGL 2 enabled.';}
-
 
 
 
