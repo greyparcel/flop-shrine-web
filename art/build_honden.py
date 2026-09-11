@@ -181,6 +181,13 @@ for side,label in [(-1,'West'),(1,'East')]:
     for o in list(bpy.context.scene.objects):
         if o.name.startswith(label+' gallery roof'):o.location.x+=gx;o.location.y+=2
 
+# Center the offertory box on the porch depth (deck front -6.25, facade -2.7).
+# Translate the complete bell/rope and box together; preserve their relative layout.
+entrance_depth_offset=1.45
+for o in bpy.context.scene.objects:
+    if o.name.startswith(('Entrance suzu bell','Bell ','Offertory ')):
+        o.location.y+=entrance_depth_offset
+
 # Bake curves to meshes; keep objects editable in the blend.
 bpy.ops.object.select_all(action='SELECT')
 bpy.context.view_layer.objects.active=next(o for o in bpy.context.scene.objects if o.type=='MESH')
