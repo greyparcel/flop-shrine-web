@@ -426,7 +426,7 @@ document.querySelector('#experience').addEventListener('wheel',e=>{e.preventDefa
 let drag=null,inertia=0;
 canvas.addEventListener('wheel',()=>{inertia=0;},{passive:true});
 document.addEventListener('pointerdown',()=>{if(inertia){inertia=0;state.target=state.distance;}},true);
-canvas.addEventListener('pointerdown',e=>{if(!e.isPrimary)return;drag={id:e.pointerId,y:e.clientY,time:performance.now(),velocity:0,touch:e.pointerType==='touch'};canvas.setPointerCapture(e.pointerId);canvas.focus({preventScroll:true});});
+canvas.addEventListener('pointerdown',e=>{if(!e.isPrimary){drag=null;inertia=0;state.target=state.distance;return;}drag={id:e.pointerId,y:e.clientY,time:performance.now(),velocity:0,touch:e.pointerType==='touch'};canvas.setPointerCapture(e.pointerId);canvas.focus({preventScroll:true});});
 canvas.addEventListener('pointermove',e=>{
   if(!drag||drag.id!==e.pointerId)return;
   const now=performance.now(),elapsed=Math.max(8,now-drag.time),speed=drag.touch?1.3:1;
@@ -554,3 +554,4 @@ function frame(now){
 }
 requestAnimationFrame(frame);
 } catch(error){console.error(error);status.hidden=false;status.textContent='Unable to start the 3D view. Please use a browser with WebGL 2 enabled.';}
+
