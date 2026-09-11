@@ -374,6 +374,7 @@ for(let i=0;i<torchRows;i++){
   }
 }
 state.torchCount=torchFlames.length;
+for(const fire of torchFlames)fire.layers.set(1);
 state.approachLightDesign='kagaribi';
 state.lastTorchDistance=state.torchStartDistance+(torchRows-1)*8;
 
@@ -383,12 +384,16 @@ const floatColor=renderer.extensions.has('EXT_color_buffer_float')||renderer.ext
 const target=new THREE.WebGLRenderTarget(1,1,{depthBuffer:true,type:floatColor?THREE.HalfFloatType:THREE.UnsignedByteType});
 state.shadowBuffer=floatColor?'float16':'byte8';
 target.samples=4;
+// Preserve architecture occlusion in a separate flame pass, outside CRT processing.
+const flameTarget=new THREE.WebGLRenderTarget(1,1,{depthBuffer:true,type:target.texture.type});
+flameTarget.samples=4;
+const occlusionMaterial=new THREE.MeshBasicMaterial({colorWrite:false});
 const screenScene=new THREE.Scene();
 const screenCamera=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
 const screenMaterial=new THREE.ShaderMaterial({
-  uniforms:{image:{value:target.texture},resolution:{value:new THREE.Vector2(1,1)},crt:{value:1}},
+  uniforms:{image:{value:target.texture},flames:{value:flameTarget.texture},resolution:{value:new THREE.Vector2(1,1)},crt:{value:1}},
   vertexShader:`varying vec2 uv0;void main(){uv0=uv;gl_Position=vec4(position.xy,0.,1.);}`,
-  fragmentShader:`precision highp float;uniform sampler2D image;uniform vec2 resolution;uniform float crt;varying vec2 uv0;
+  fragmentShader:`precision highp float;uniform sampler2D image;uniform sampler2D flames;uniform vec2 resolution;uniform float crt;varying vec2 uv0;
   vec3 displaySRGB(vec3 linearColor){
     vec3 c=max(linearColor,vec3(0.));
     return mix(12.92*c,1.055*pow(c,vec3(1./2.4))-.055,step(vec3(.0031308),c));
@@ -402,6 +407,7 @@ const screenMaterial=new THREE.ShaderMaterial({
       c*=.94+.06*sin(uv.y*resolution.y*2.094395);
       vec2 v=uv-.5;c*=1.-.58*dot(v,v);
     }
+    c+=texture2D(flames,uv).rgb;
     gl_FragColor=vec4(displaySRGB(c),1.);
   }`
 });
@@ -411,7 +417,7 @@ function resize(){
   renderer.setSize(w,h,false);camera.aspect=w/h;
   camera.fov=w<650?74:62;camera.updateProjectionMatrix();
   const size=renderer.getDrawingBufferSize(new THREE.Vector2());
-  target.setSize(size.x,size.y);screenMaterial.uniforms.resolution.value.copy(size);
+  target.setSize(size.x,size.y);flameTarget.setSize(size.x,size.y);screenMaterial.uniforms.resolution.value.copy(size);
 }
 addEventListener('resize',resize);resize();
 const clamp=v=>Math.max(0,Math.min(state.length,v));
@@ -531,6 +537,11 @@ function frame(now){
   state.cameraPosition=camera.position.toArray();
   state.cameraDirection=camera.getWorldDirection(direction).toArray();
   renderer.setRenderTarget(target);renderer.render(scene,camera);
+  const background=scene.background;scene.background=null;
+  renderer.setRenderTarget(flameTarget);renderer.setClearColor(0x000000,0);renderer.clear();
+  renderer.autoClear=false;scene.overrideMaterial=occlusionMaterial;renderer.render(scene,camera);
+  scene.overrideMaterial=null;camera.layers.set(1);renderer.render(scene,camera);
+  camera.layers.set(0);renderer.autoClear=true;scene.background=background;renderer.setClearColor(palette.background,1);
   renderer.setRenderTarget(null);renderer.render(screenScene,screenCamera);
   const percentage=100*state.distance/state.length;
   document.querySelector('#distance').textContent=String(Math.round(state.distance)).padStart(3,'0')+' / '+Math.round(state.length)+' m';
