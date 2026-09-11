@@ -427,15 +427,16 @@ let drag=null,inertia=0;
 canvas.addEventListener('wheel',()=>{inertia=0;},{passive:true});
 document.addEventListener('pointerdown',()=>{if(inertia){inertia=0;state.target=state.distance;}},true);
 const wishPanel=document.querySelector('#gate-wish');
+const promptPanel=document.querySelector('#participate');
 let suppressWishClickUntil=0;
-for(const surface of [canvas,wishPanel]){
+for(const surface of [canvas,wishPanel,promptPanel]){
 surface.addEventListener('pointerdown',e=>{if(!e.isPrimary){drag=null;inertia=0;state.target=state.distance;return;}drag={id:e.pointerId,y:e.clientY,time:performance.now(),velocity:0,touch:e.pointerType==='touch',travel:0};if(surface===canvas){canvas.setPointerCapture(e.pointerId);canvas.focus({preventScroll:true});}});
 surface.addEventListener('pointermove',e=>{
   if(!drag||drag.id!==e.pointerId)return;
   const now=performance.now(),elapsed=Math.max(8,now-drag.time),speed=drag.touch?1.3:1;
   const amount=(drag.y-e.clientY)*.032*speed,velocityLimit=65*speed;
   drag.travel+=Math.abs(drag.y-e.clientY);
-  if(surface===wishPanel&&drag.travel>6){surface.setPointerCapture(e.pointerId);suppressWishClickUntil=performance.now()+700;}
+  if(surface!==canvas&&drag.travel>6){surface.setPointerCapture(e.pointerId);suppressWishClickUntil=performance.now()+700;}
   move(amount);
   drag.velocity=drag.velocity*.25+Math.max(-velocityLimit,Math.min(velocityLimit,amount*1000/elapsed))*.75;
   drag.y=e.clientY;drag.time=now;
@@ -447,7 +448,7 @@ surface.addEventListener('pointerup',e=>{
 });
 for(const event of ['pointercancel','lostpointercapture'])surface.addEventListener(event,e=>{if(event==='lostpointercapture'&&e.target!==surface)return;if(drag)inertia=0;drag=null;});
 }
-wishPanel.addEventListener('click',e=>{if(performance.now()<suppressWishClickUntil){e.preventDefault();e.stopPropagation();}},true);
+for(const panel of [wishPanel,promptPanel])panel.addEventListener('click',e=>{if(performance.now()<suppressWishClickUntil){e.preventDefault();e.stopPropagation();}},true);
 addEventListener('keydown',e=>{
   inertia=0;
   if(e.target instanceof HTMLButtonElement||e.target instanceof HTMLAnchorElement)return;
@@ -561,6 +562,7 @@ function frame(now){
 }
 requestAnimationFrame(frame);
 } catch(error){console.error(error);status.hidden=false;status.textContent='Unable to start the 3D view. Please use a browser with WebGL 2 enabled.';}
+
 
 
 

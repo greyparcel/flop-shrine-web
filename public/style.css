@@ -34,3 +34,5 @@ footer{bottom:max(30px,env(safe-area-inset-bottom));align-items:flex-end}.journe
 
 
 #gate-wish{touch-action:pinch-zoom;user-select:none;-webkit-user-select:none}
+
+#participate{touch-action:pinch-zoom}
