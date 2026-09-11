@@ -19,6 +19,10 @@ function alignCue() {
   const bottom = inkBounds(copy.lastElementChild).bottom;
   hint.style.setProperty('--cue-top', `${top - hint.getBoundingClientRect().top}px`);
   hint.style.setProperty('--cue-height', `${bottom - top}px`);
+  const arrow = hint.querySelector('.swipe-arrow');
+  const ink = inkBounds(arrow);
+  const offset = (ink.top + ink.bottom) / 2 - arrow.getBoundingClientRect().top;
+  hint.style.setProperty('--arrow-offset', `${-offset}px`);
 }
 new ResizeObserver(alignCue).observe(copy);
 document.fonts.ready.then(alignCue);
