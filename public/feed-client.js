@@ -4,7 +4,8 @@ export const detailURL=wish=>`./wish.html?generation=${wish.generation}&seq=${wi
 export const authorLabel=wish=>wish.signatureVerified?wish.from:`Nickname: ${wish.from}`;
 export function feedNotice(snapshot){
   if(snapshot.status==='unavailable')return 'Wishes are temporarily unavailable.';
-  if(snapshot.status==='stale')return 'Showing saved wishes. Updates are temporarily unavailable.';
+  if(snapshot.status==='stale')return snapshot.wishes?.length?'':'Wishes are temporarily unavailable.';
   if(snapshot.historyIncomplete)return 'Some older room posts could not be retrieved.';
   return '';
 }
+

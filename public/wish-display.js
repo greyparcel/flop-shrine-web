@@ -1,29 +1,13 @@
 import {getFeed,detailURL,feedNotice,authorLabel} from './feed-client.js';
 import {newestWishes} from './wish-order.js';
 export async function createWishDisplay({gateSpacing,gateCount}){
-  const notice=document.querySelector('#feed-status'),refreshButton=document.querySelector('#refresh-wishes');
+  const notice=document.querySelector('#feed-status');
   let snapshot;
   try{snapshot=await getFeed(`limit=${gateCount}`);}catch{snapshot={wishes:[],status:'unavailable',version:null};}
   notice.textContent=feedNotice(snapshot);
-  refreshButton.onclick=()=>location.reload();
+
   // Fetch once and keep assignments stable until the page is reloaded.
   const entries=newestWishes(snapshot.wishes).slice(0,gateCount);
-  const removed=new Set();
-  let polling=false;
-  async function checkUpdates(){
-    if(polling||document.hidden)return;polling=true;
-    try{
-      const current=await getFeed('meta=1&watch='+encodeURIComponent(entries.map(w=>w.id).join(',')));
-      for(const id of current.hiddenIds||[])removed.add(id);
-      refreshButton.hidden=current.version===snapshot.version;
-      notice.textContent=feedNotice(current);
-    }catch(e){
-      if(e.body?.reason==='POLICY_UNAVAILABLE'){for(const w of entries)removed.add(w.id);refreshButton.hidden=false;}
-      notice.textContent='Wish updates are temporarily unavailable.';
-    }finally{polling=false;}
-  }
-  setInterval(checkUpdates,30000);
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkUpdates();});
   const card=document.querySelector('#gate-wish');
   const title=card.querySelector('.wish-label'),text=card.querySelector('.wish-text'),author=card.querySelector('.wish-author'),source=card.querySelector('.wish-source');
   const reduced=matchMedia('(prefers-reduced-motion: reduce)');
@@ -48,7 +32,7 @@ export async function createWishDisplay({gateSpacing,gateCount}){
     const visualLead=1.8;
     const interval=Math.floor((distance-(9-visualLead))/gateSpacing);
     const entry=interval>=0&&interval<gateCount?entries[interval]:null;
-    const candidate=enabled&&entry&&!removed.has(entry.id)?entry:null;
+    const candidate=enabled&&entry?entry:null;
     if(!candidate){setVisible(false);return null;}
     if(candidate.id!==shown){
       previous?.remove();animation?.cancel();
@@ -74,3 +58,4 @@ export async function createWishDisplay({gateSpacing,gateCount}){
   }
   return {update,count:entries.length};
 }
+
