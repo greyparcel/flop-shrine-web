@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {generateKeyPairSync,sign} from 'node:crypto';
+import {createHash,generateKeyPairSync,sign} from 'node:crypto';
 import {accepted} from './feed.mjs';
 import {createHybridFeed} from './public/hybrid-feed.js';
 import {normalize,parseRecords,mergePosts} from './public/feed-model.js';
@@ -44,6 +44,26 @@ test('tampered and invalid signatures remain included but never verify',async()=
     assert.equal(checked.fingerprint,accepted(invalid,1).fingerprint);
   }
 });
+for(const [label,normalizePost] of [['Node',accepted],['WebCrypto',normalize]]){
+  test(`${label} keeps same-author, same-text signed posts with distinct nonces`,async()=>{
+    const rows=[signed(7,'7001'),{...signed(7,'7002'),seq:8}];
+    const posts=await Promise.all(rows.map(row=>normalizePost(row,1)));
+    assert.deepEqual(posts.map(post=>post.signatureVerified),[true,true]);
+    assert.deepEqual(mergePosts([posts[0]],[posts[1]]).map(post=>post.id),['1:8','1:7']);
+    for(const [i,post] of posts.entries()){
+      // Check the signed identity contract independently of either implementation.
+      const expected=createHash('sha256').update(`${rows[i].from}|${rows[i].nonce}|${rows[i].text}`).digest('hex');
+      assert.equal(post.fingerprint,expected);
+    }
+  });
+  test(`${label} deduplicates the same signed envelope replayed at a different sequence`,async()=>{
+    const original=signed(9,'9001'),replay={...original,seq:10};
+    const posts=await Promise.all([original,replay].map(row=>normalizePost(row,1)));
+    assert.deepEqual(posts.map(post=>post.signatureVerified),[true,true]);
+    assert.equal(posts[0].fingerprint,posts[1].fingerprint);
+    assert.deepEqual(mergePosts([posts[0]],[posts[1]]).map(post=>post.id),['1:9']);
+  });
+}
 test('static archive plus live posts, shared fetch, persistence across generation changes and pagination',async()=>{
   const f=fixture();const [a,b]=await Promise.all([f.get(),f.get()]);assert.equal(f.reads(),1);assert.equal(a.version,b.version);assert.equal(a.total,5);
   assert.deepEqual(a.wishes.map(w=>[w.id,w.signatureVerified]),[['1:5',false],['1:4',false],['1:3',true],['1:2',false],['1:1',true]]);
